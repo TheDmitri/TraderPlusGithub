@@ -1,0 +1,7 @@
+//<'TraderPlus.pbo' properties via Mikero's dos tools, dll version 8.57>
+prefix=TraderPlus;
+Mikero=DePbo.dll.8.57;
+version=23012119;
+//PboType=Arma Addon;
+//PboType=Arma Addon;
+//</properties>
