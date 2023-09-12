@@ -454,49 +454,90 @@ class TraderPlusHelper
 		return false;
 	}
 
-  static bool GetPlayersItems(PlayerBase player, out array<ref TraderPlusArticle>playerItems, string filter = "")
+  static bool GetPlayersItems(PlayerBase player, out array<ref TraderPlusArticle> playerItems, string filter = "")
   {
-      if(!player)return false;
-
-      playerItems.Clear();
-
-  		array<EntityAI> itemsArray = new array<EntityAI>;
-  		player.GetInventory().EnumerateInventory(InventoryTraversalType.PREORDER, itemsArray);
-  		foreach(EntityAI entity: itemsArray)
-  		{
-  				ItemBase temp = ItemBase.Cast(entity);
-          if(temp && temp.IsLockedInSlot())continue;
-          if(Weapon_Base.Cast(entity.GetHierarchyParent()))continue;
-          if(IsWearByPlayer(entity))continue;
-          TraderPlusArticle product = new TraderPlusArticle;
-  				if (temp && !temp.IsInherited(SurvivorBase))
-  				{
-              if(temp.IsKindOf("NewReceiptBase"))
-              {
-                NewReceiptBase carBox = NewReceiptBase.Cast(temp);
-                string type = carBox.CarClassName;
-                if(!CanAddProductToList(filter, type))continue;
-                product.AddPlayerItems("",type,1,1,temp.GetHealthLevel(), true);
-                playerItems.Insert(product);
-                continue;
-              }
-              if (temp.IsKindOf("Edible_Base"))
-          		{
-          			Edible_Base edible = Edible_Base.Cast(temp);
-          	    if (edible.HasFoodStage() && edible.GetFoodStageType() != FoodStageType.RAW)
-          				 continue;
-          		}
-              int amount = GetItemAmount(temp);
-              if(amount == 0)amount = 1;
-              if(!CanAddProductToList(filter, temp.GetType()))continue;
-              product.AddPlayerItems("",temp.GetType(),1,amount,temp.GetHealthLevel(), IsInventoryEmpty(temp));
-              playerItems.Insert(product);
-  				}
-  		}
-  		if(playerItems.Count() > 0)
-  		    return true;
-
+    if (!player)
       return false;
+  
+    playerItems.Clear();
+  
+    array<EntityAI> itemsArray = new array<EntityAI>;
+    player.GetInventory().EnumerateInventory(InventoryTraversalType.PREORDER, itemsArray);
+  
+    foreach(EntityAI entity : itemsArray)
+    {
+      ItemBase temp = ItemBase.Cast(entity);
+  
+      if (ShouldSkipItem(temp))
+      {
+        Print(temp.GetType() + " should be skipped");
+        continue;
+      }
+  
+      TraderPlusArticle product = new TraderPlusArticle();
+  
+      if (temp.IsKindOf("NewReceiptBase"))
+      {
+        AddNewReceiptProduct(temp, playerItems, filter);
+      }
+      else if (temp.IsKindOf("Edible_Base"))
+      {
+        AddEdibleProduct(temp, playerItems, filter);
+      }
+      else
+      {
+        AddGenericProduct(temp, playerItems, filter);
+      }
+    }
+  
+    return playerItems.Count() > 0;
+  }
+  
+  static bool ShouldSkipItem(ItemBase item)
+  {
+    return item && item.IsLockedInSlot() || Weapon_Base.Cast(item.GetHierarchyParent()) || IsWearByPlayer(item);
+  }
+  
+  static void AddNewReceiptProduct(ItemBase item, out array<ref TraderPlusArticle> playerItems, string filter)
+  {
+      NewReceiptBase carBox = NewReceiptBase.Cast(item);
+      string type = carBox.CarClassName;
+  
+      if (!CanAddProductToList(filter, type))
+          return;
+  
+      TraderPlusArticle product = new TraderPlusArticle();
+      product.AddPlayerItems("", type, 1, 1, item.GetHealthLevel(), true);
+      playerItems.Insert(product);
+  }
+  
+  static void AddEdibleProduct(ItemBase item, out array<ref TraderPlusArticle> playerItems, string filter)
+  {
+      Edible_Base edible = Edible_Base.Cast(item);
+  
+      if (edible.HasFoodStage() && edible.GetFoodStageType() != FoodStageType.RAW)
+          return;
+  
+      TraderPlusArticle product = new TraderPlusArticle();
+      int quantity = GetItemAmount(item);
+      if (quantity == 0) quantity = 1;
+      if (!CanAddProductToList(filter, item.GetType()))
+          return;
+  
+      product.AddPlayerItems("", item.GetType(), 1, quantity, item.GetHealthLevel(), IsInventoryEmpty(item));
+      playerItems.Insert(product);
+  }
+  
+  static void AddGenericProduct(ItemBase item, out array<ref TraderPlusArticle> playerItems, string filter)
+  {
+      TraderPlusArticle product = new TraderPlusArticle();
+      int quantity = GetItemAmount(item);
+      if (quantity == 0) quantity = 1;
+      if (!CanAddProductToList(filter, item.GetType()))
+          return;
+  
+      product.AddPlayerItems("", item.GetType(), 1, quantity, item.GetHealthLevel(), IsInventoryEmpty(item));
+      playerItems.Insert(product);
   }
 
   static void GetPlayersAttachmentsWeight(PlayerBase player)
@@ -614,32 +655,34 @@ static bool IsWearByPlayer(EntityAI entity)
     return quantity;
   }
 
-  static int GetQuantityOfSpecificItem(PlayerBase player, string classname, int health)
+  static int GetQuantityOfSpecificItem(PlayerBase player, string classname, int healthLevel)
   {
-      if(!player)
-        return 0;
+    if(!player)
+      return 0;
 
-  		classname.ToLower();
-  		int quantity = 0;
-  		array<EntityAI> itemsArray = new array<EntityAI>;
-  		player.GetInventory().EnumerateInventory(InventoryTraversalType.PREORDER, itemsArray);
-      foreach(EntityAI entity: itemsArray)
-      {
-        string type = entity.GetType();
-        if(IsWearByPlayer(entity))continue;
-        type.ToLower();
-        if (type == classname)
-        {
-            ItemBase temp = ItemBase.Cast(entity);
-            if(temp && temp.IsLockedInSlot())continue;
-            if(temp && (temp.GetHealthLevel() == health || health == -1))
-                quantity+=GetItemSpecificAmount(temp);
-        }
-      }
-      #ifdef TRADERPLUSDEBUG
-      GetTraderPlusLogger().LogInfo("GetQuantityOfSpecificItem => quantity :"+quantity.ToString());
-      #endif
-  		return quantity;
+  	int quantity = 0;
+  	array<EntityAI> itemsArray = new array<EntityAI>;
+  	player.GetInventory().EnumerateInventory(InventoryTraversalType.PREORDER, itemsArray);
+    foreach(EntityAI entity: itemsArray)
+    {
+      ItemBase item = ItemBase.Cast(entity);
+
+      if (ShouldSkipItem(item) || !CF_String.EqualsIgnoreCase(item.GetType(),classname))
+        continue;
+
+      if(EqualHealth(item, healthLevel))
+        quantity += GetItemSpecificAmount(item);
+    }
+
+    #ifdef TRADERPLUSDEBUG
+    GetTraderPlusLogger().LogInfo("GetQuantityOfSpecificItem => quantity :"+quantity.ToString());
+    #endif
+  	return quantity;
+  }
+
+  static bool EqualHealth(ItemBase item, int healthLevel)
+  {
+    return item.GetHealthLevel() == healthLevel || healthLevel == -1;
   }
 
   //--------------------------Start Vehicle handler functions---------------------------//

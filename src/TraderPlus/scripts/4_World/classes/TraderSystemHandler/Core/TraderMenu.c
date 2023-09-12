@@ -1306,7 +1306,7 @@ class TraderPlusMenu extends UIScriptedMenu
   {
       for(int j=0;j<m_PlayerItems.Count();j++)
       {
-        if(m_PlayerItems[j].ClassName==productname && m_PlayerItems[j].Health == health)
+        if(m_PlayerItems[j].ClassName == productname && m_PlayerItems[j].Health == health)
         {
           if(TraderPlusHelper.GetQuantityOfSpecificItem(PlayerBase.Cast(GetGame().GetPlayer()),productname,health) != 0)
             return j;
