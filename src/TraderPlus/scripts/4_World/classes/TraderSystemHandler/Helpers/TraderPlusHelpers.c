@@ -495,7 +495,10 @@ class TraderPlusHelper
   
   static bool ShouldSkipItem(ItemBase item)
   {
-    return item && item.IsLockedInSlot() || Weapon_Base.Cast(item.GetHierarchyParent()) || IsWearByPlayer(item);
+    if(item == null || item.IsLockedInSlot() || Weapon_Base.Cast(item.GetHierarchyParent()) || IsWearByPlayer(item))
+      return true;
+
+    return false;
   }
   
   static void AddNewReceiptProduct(ItemBase item, out array<ref TraderPlusArticle> playerItems, string filter)
