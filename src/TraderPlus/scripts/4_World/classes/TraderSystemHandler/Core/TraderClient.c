@@ -52,10 +52,8 @@ class TraderPlusClient
 
 		foreach(string category : categories)
 		{
-			
 			GetTraderPlusLogger().LogDebug("foreach: "+category);
-			
-			array<ref TraderPlusItem> ttproducts
+			array<ref TraderPlusItem> ttproducts;
 			if(!ttraderPlusItems.traderPlusItems.Find(category, ttproducts))continue;
 			TraderPlusCategoryItems categoryItems = new TraderPlusCategoryItems(category);
 			foreach(TraderPlusItem traderPlusItem: ttproducts)
@@ -83,7 +81,7 @@ class TraderPlusClient
 				{
 					categoryItems.AddProductToTraderPlusCategory(category,traderPlusItem.ClassName,traderPlusItem.MaxStock,0,traderPlusItem.MaxStock);
 					
-			    GetTraderPlusLogger().LogDebug(traderPlusItem.ClassName + " added to stockItems");
+			    	GetTraderPlusLogger().LogDebug(traderPlusItem.ClassName + " added to stockItems");
 			    
 					skip = true;
 				}
@@ -124,23 +122,20 @@ class TraderPlusClient
   {
     
     GetTraderPlusLogger().LogDebug("CalculatePriceForThatItem: name"+classname+"state:"+state.ToString());
-    
 
     //We make sure that the item is accept under its state condttion
     if((!GetTraderPlusConfigClient().AcceptWorn && state == TraderPlusItemState.WORN) || (!GetTraderPlusConfigClient().AcceptDamaged && state == TraderPlusItemState.DAMAGED) || (!GetTraderPlusConfigClient().AcceptBadlyDamaged && state == TraderPlusItemState.BADLY_DAMAGED) || state == TraderPlusItemState.RUINED)
     {
-      
       GetTraderPlusLogger().LogDebug("CalculatePriceForThatItem: state is not accepted");
-      
       return -1,
     }
 
 		if(!m_TraderPlusItems.traderPlusItems || !m_TraderPlusItems.traderPlusItems[category] || m_TraderPlusItems.traderPlusItems[category].Count() < 1)return -1;
     foreach(TraderPlusItem tpItem: m_TraderPlusItems.traderPlusItems[category])
     {
-      if(CF_String.EqualsIgnoreCase(tpItem.ClassName,classname))
-      {
-        //if(!GetTraderPlusClient().IsCorrectCategory(tpItem.CategoryName))continue;
+      if(!CF_String.EqualsIgnoreCase(tpItem.ClassName,classname))
+	  	return;
+
         if(trademode == TRADEMODE_SELL)
         {
           tradeqty = tpItem.Quantity*qtyMultiplier;
@@ -175,7 +170,6 @@ class TraderPlusClient
         }
         else //buy - TRADEMODE_BUY
         {
-          
           GetTraderPlusLogger().LogDebug("CalculatePriceForThatItem: looking for buyprice:");
           
           tradeqty = tpItem.Quantity*qtyMultiplier;
@@ -212,7 +206,6 @@ class TraderPlusClient
           
           return baseBuyprice;
         }
-      }
     }
     return 0;
   }
@@ -309,9 +302,6 @@ class TraderPlusClient
 			{
 				if(CF_String.EqualsIgnoreCase(m_PlayerItems[i].ClassName,name) && m_PlayerItems[i].Health==health)
 					countSpecificItem++;
-
-				/*if(m_PlayerItems[i].ClassName==name)
-					countSpecificItem++;*/
 			}
 
 			if(m_PlayerItems.Count() != 0)

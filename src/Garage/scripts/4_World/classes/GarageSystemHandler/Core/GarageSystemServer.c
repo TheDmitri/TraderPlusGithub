@@ -123,7 +123,7 @@ class GarageServer
     GetGMLogger().LogInfo("ParkInRequestHandler");
     #endif
 
-    if(!GarageHelpers.CheckifPlayerHasEnoughMoney(player, GetGarageConfig().ParkInCost))
+    if(!GetTraderPlusCurrencyModule().CheckIfPlayerHasEnoughMoney(player, GetGarageConfig().ParkInCost))
     {
       NotificationSystem.SendNotificationToPlayerIdentityExtended(player.GetIdentity(), 2, "Garage", GetGarageConfig().NotEnoughMoney, "Garage/image/CarLogo.paa");
       return;
@@ -310,7 +310,7 @@ class GarageServer
     GetRPCManager().SendRPC("Garage", "GarageResponse",  new Param4<ref TStringArray, ref TIntArray, vector, int>(vehiclesName, vehiclesHealth, pos, TraderPlusResponse.BUY_SUCCESS),true, player.GetIdentity());
   }
 
-  void ParkOutRequestHandler(PlayerBase player, int id, int listpos,string carname, vector pos)
+  void ParkOutRequestHandler(PlayerBase player, int id, int listpos, string carname, vector pos)
   {
     #ifdef GMDEBUG
     GetGMLogger().LogInfo("ParkOutRequestHandler");

@@ -34,7 +34,7 @@ class ActionTraderPlusBankingMenu: ActionInteractBase
         PlayerBase ntarget = PlayerBase.Cast( target.GetObject() );
 				if(ntarget && ntarget.TraderID ==-2)
 				{
-					if((GetTraderPlusBankingConfigClient().IsCreditCarNeededForTransaction && !item_in_hands) || (GetTraderPlusBankingConfigClient().IsCreditCarNeededForTransaction && item_in_hands && !item_in_hands.IsKindOf("TraderPlusCreditCard")))
+					if((GetTraderPlusBankConfig().IsCreditCarNeededForTransaction && !item_in_hands) || (GetTraderPlusBankConfig().IsCreditCarNeededForTransaction && item_in_hands && !item_in_hands.IsKindOf("TraderPlusCreditCard")))
 						return false;
 
 					return true;
@@ -43,7 +43,7 @@ class ActionTraderPlusBankingMenu: ActionInteractBase
 				BuildingBase nObject = BuildingBase.Cast( target.GetObject() );
 				if (nObject && nObject.TraderID ==-2)
 				{
-					if((GetTraderPlusBankingConfigClient().IsCreditCarNeededForTransaction && !item_in_hands) || (GetTraderPlusBankingConfigClient().IsCreditCarNeededForTransaction && item_in_hands && !item_in_hands.IsKindOf("TraderPlusCreditCard")))
+					if((GetTraderPlusBankConfig().IsCreditCarNeededForTransaction && !item_in_hands) || (GetTraderPlusBankConfig().IsCreditCarNeededForTransaction && item_in_hands && !item_in_hands.IsKindOf("TraderPlusCreditCard")))
 						return false;
 					
 					return true;

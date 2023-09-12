@@ -37,12 +37,12 @@ class TraderPlusBankingServer
       {
         if(account)
         {
-          if(!TraderPlusBankHelpers.CheckifPlayerHasEnoughMoney(transaction.Customer, transaction.Amount))return;
-          int amountMinusFees = transaction.Amount - transaction.Amount*GetTraderPlusBankConfigServer().TransactionFees;
+          if(!GetTraderPlusCurrencyModule().CheckIfPlayerHasEnoughMoney(transaction.Customer, transaction.Amount, GetTraderPlusBankConfig().CurrenciesAccepted))return;
+          int amountMinusFees = transaction.Amount - transaction.Amount*GetTraderPlusBankConfig().TransactionFees;
           newAmount = account.MoneyAmount + amountMinusFees;
           account.MoneyAmount = newAmount;
           account.UpdateAccount(transaction.Customer);
-          TraderPlusBankHelpers.RemoveMoneyFromPlayer(transaction.Customer,transaction.Amount);
+          GetTraderPlusCurrencyModule().RemoveMoneyAmountFromPlayer(transaction.Customer,transaction.Amount, GetTraderPlusBankConfig().CurrenciesAccepted);
         }
       }
       break;
@@ -55,7 +55,7 @@ class TraderPlusBankingServer
           newAmount = account.MoneyAmount - transaction.Amount;
           account.MoneyAmount = newAmount;
           account.UpdateAccount(transaction.Customer);
-          TraderPlusBankHelpers.AddMoneyToPlayer(transaction.Customer,transaction.Amount);
+          GetTraderPlusCurrencyModule().AddMoneyToPlayer(transaction.Customer,transaction.Amount, GetTraderPlusBankConfig().CurrenciesAccepted);
         }
       }
       break;
@@ -66,14 +66,14 @@ class TraderPlusBankingServer
         {
           if(!FileExist(string.Format(TPB_DB_FILENAME, transaction.DestinationIDAccount)))
           {
-            NotificationSystem.SendNotificationToPlayerIdentityExtended(transaction.Customer.GetIdentity(), 2, "Bank Transfer", GetTraderPlusBankConfigServer().TheAmountErrorTransferAccount, "TraderPlusBanking/datasets/Bank.paa");
+            NotificationSystem.SendNotificationToPlayerIdentityExtended(transaction.Customer.GetIdentity(), 2, "Bank Transfer", GetTraderPlusBankConfig().TheAmountErrorTransferAccount, "TraderPlusBanking/datasets/Bank.paa");
             return;
           }
           if(account.MoneyAmount < transaction.Amount)return;
-          newAmount = account.MoneyAmount - transaction.Amount - transaction.Amount*GetTraderPlusBankConfigServer().TransactionFees;
+          newAmount = account.MoneyAmount - transaction.Amount - transaction.Amount*GetTraderPlusBankConfig().TransactionFees;
           account.MoneyAmount = newAmount;
           account.UpdateAccount(transaction.Customer);
-          TraderPlusBankingData playerAccount = TraderPlusBankingData.Load(transaction.DestinationIDAccount, GetTraderPlusBankConfigServer().DefaultMaxCurrency,GetTraderPlusBankConfigServer().DefaultStartCurrency);
+          TraderPlusBankingData playerAccount = TraderPlusBankingData.Load(transaction.DestinationIDAccount, GetTraderPlusBankConfig().DefaultMaxCurrency,GetTraderPlusBankConfig().DefaultStartCurrency);
           if(playerAccount)
           {
             playerAccount.Version= "-1";
@@ -83,7 +83,7 @@ class TraderPlusBankingServer
               playerAccount.MoneyAmount += transaction.Amount;
 
             playerAccount.Save(transaction.DestinationIDAccount);
-            NotificationSystem.SendNotificationToPlayerIdentityExtended(transaction.Customer.GetIdentity(), 2, "Bank Transfer", GetTraderPlusBankConfigServer().TheAmountHasBeenTransferedToTheAccount, "TraderPlusBanking/datasets/Bank.paa");
+            NotificationSystem.SendNotificationToPlayerIdentityExtended(transaction.Customer.GetIdentity(), 2, "Bank Transfer", GetTraderPlusBankConfig().TheAmountHasBeenTransferedToTheAccount, "TraderPlusBanking/datasets/Bank.paa");
           }
         }
       }
@@ -133,7 +133,7 @@ class TraderPlusBankingServer
 
      TransactionsQueue.EnQueue(m_transaction);
 
-     if(GetTraderPlusBankConfigServer().BankingLogs)
+     if(GetTraderPlusBankConfig().BankingLogs)
       GetTraderPlusLogger().LogInfo("TraderPlusBankingWithdraw:"+sender.GetName() +" amount:" +data.param1.ToString()); //sender.GetName() = player.GetIdentity().GetName()
   }
 
@@ -155,7 +155,7 @@ class TraderPlusBankingServer
 
      TransactionsQueue.EnQueue(m_transaction);
 
-     if(GetTraderPlusBankConfigServer().BankingLogs)
+     if(GetTraderPlusBankConfig().BankingLogs)
       GetTraderPlusLogger().LogInfo("TraderPlusBankingDeposit:"+sender.GetName() +" amount:" +data.param1.ToString()); //sender.GetName() = player.GetIdentity().GetName()
   }
 

@@ -23,15 +23,6 @@ enum TraderPlusInventoryCategory
   INSURANCES=4
 };
 
-enum TraderPlusItemState
-{
-  PRISTINE = 0,
-  WORN,
-  DAMAGED,
-  BADLY_DAMAGED,
-  RUINED
-}
-
 enum TraderPlusSound
 {
   QUICKEVENT=1,

@@ -13,6 +13,27 @@ class TraderPlusProduct
   int        CollateralMoney;
   bool       TradMode=true;
 
+  ref TStringArray acceptedCurrencies;
+
+  void TraderPlusProduct()
+  {
+    acceptedCurrencies = new TStringArray();
+  }
+
+  void SetAcceptedCurrencies()
+  {
+    foreach(TraderPlusIDs traderPlusIds : GetTraderPlusIDConfig().IDs)
+    {
+      if(traderPlusIds.Id == id)
+      {
+        acceptedCurrencies = traderPlusIds.CurrenciesAccepted;
+        return;
+      }
+    }
+
+    acceptedCurrencies = null;
+  }
+
   void Debug()
   {
     string title = "-------Product-------";

@@ -143,61 +143,18 @@ class GarageMenu extends UIScriptedMenu
 
   void MoneyUpdate()
   {
-    if(m_PayWithBankAccount){
-      if(GetBankAccount())
+    if(m_PayWithBankAccount && GetBankAccount())
+    {
       m_MoneyAmountOnPlayer = GetBankAccount().MoneyAmount;
-    }else m_MoneyAmountOnPlayer = GetPlayerMoney();
+    }
+    else
+    {
+      PlayerBase player = PlayerBase.Cast( GetGame().GetPlayer() );
+      m_MoneyAmountOnPlayer = GarageHelpers.GetPlayerMoney(player);
+    } 
+    
     string stringMoney = TraderPlusHelper.IntToCurrencyString(m_MoneyAmountOnPlayer, ",");
     m_TextMoney.SetText(stringMoney);
-  }
-
-  int GetPlayerMoney()
-  {
-      PlayerBase player = PlayerBase.Cast(GetGame().GetPlayer());
-      if(!player)return 0;
-
-      int amount = 0;
-      float qty;
-      int value;
-      array<EntityAI> itemsArray = new array<EntityAI>;
-      player.GetInventory().EnumerateInventory(InventoryTraversalType.INORDER, itemsArray);
-      for (int i = 0; i < itemsArray.Count(); i++)
-      {
-          ItemBase item = ItemBase.Cast(itemsArray.Get(i));
-          if (item)
-          {
-              string className = item.GetType();
-              for (int j = 0; j < GetTraderPlusConfigClient().MoneyName.Count(); j++)
-              {
-                TStringArray traderCurrencyArray = new TStringArray;
-    						GetTraderPlusConfigClient().MoneyName.Get(j).Split( ",", traderCurrencyArray );
-                for(int k=0;k<traderCurrencyArray.Count();k++)
-                {
-                  if (traderCurrencyArray.Get(k) == className)
-                  {
-                    if(GetTraderPlusBankingConfigClient().CurrenciesAccepted.Count() == 0)
-                    {
-                      qty = TraderPlusHelper.GetItemAmount(item);
-                      value = GetTraderPlusConfigClient().MoneyValue.Get(j);
-                      amount += (value * qty);
-                      continue;
-                    }
-
-                    for(int l=0;l<GetTraderPlusBankingConfigClient().CurrenciesAccepted.Count();l++)
-                    {
-                      if(GetTraderPlusBankingConfigClient().CurrenciesAccepted[l]==traderCurrencyArray[k])
-                      {
-                        qty = TraderPlusHelper.GetItemAmount(item);
-                        value = GetTraderPlusConfigClient().MoneyValue.Get(j);
-                        amount += (value * qty);
-                      }
-                    }
-                  }
-                }
-              }
-          }
-      }
-      return amount;
   }
 
   void SetResponseData(TStringArray vehicles, vector parkpos)
@@ -205,22 +162,24 @@ class GarageMenu extends UIScriptedMenu
     m_VehiclesName.Clear();
     m_VehiclesName = vehicles;
     m_ParkingPos = parkpos;
+
     m_PayWithBankAccount = GetGarageConfig().PayWithBankAccount;
+
     if(m_PayWithBankAccount)
-    GetRPCManager().SendRPC("TraderPlusBanking", "TraderPlusBankingRequest",  NULL, true, NULL);
+      GetRPCManager().SendRPC("TraderPlusBanking", "TraderPlusBankingRequest",  NULL, true, NULL);
   }
 
   override void Update(float timeslice)
   {
-      if(!m_canTradeRequest)
+    if(!m_canTradeRequest)
+    {
+      m_transactionTick -= timeslice;
+      if (m_transactionTick <= 0)
       {
-        m_transactionTick -= timeslice;
-        if (m_transactionTick <= 0)
-        {
-              m_transactionTick = TRADERPLUS_BANK_TRANSACTION_INTERVAL;
-              m_canTradeRequest = true;
-        }
+        m_transactionTick = TRADERPLUS_BANK_TRANSACTION_INTERVAL;
+        m_canTradeRequest = true;
       }
+    }
   }
 
   override bool OnClick (Widget w, int x, int y, int button)
@@ -245,14 +204,14 @@ class GarageMenu extends UIScriptedMenu
   void VehicleListHandler()
   {
     m_SelectedVehicle = m_GarageList.GetSelectedRow();
-    if(m_SelectedVehicle == -1)return;
+    if(m_SelectedVehicle == -1)
+      return;
+      
     UpdateVehiclePreview(m_VehiclesListName[m_SelectedVehicle]);
   }
 
   void UpdateVehiclePreview(string itemType)
 	{
-    string tempstr = itemType;
-    tempstr.ToLower();
 		if ( !m_MainItemPreview )
 			{
 				Widget preview_frame = layoutRoot.FindAnyWidget("VehiclePreview");
@@ -281,25 +240,26 @@ class GarageMenu extends UIScriptedMenu
 
   void ParkInHandler()
   {
-      if(!m_CarInPark)return;
-      if(GetGarageConfig().VehicleMustHaveLock)
-      {
-        if(!GarageHelpers.CanParkVehicle(m_CarInPark))return;
-      }
-      if(m_VehiclesName.Count() + 1 > GetGarageConfig().MaxVehicleStored)
-      {
-        NotificationSystem.AddNotificationExtended( 2, "Garage", GetGarageConfig().MaxVehicleStoredReached, "Garage/image/CarLogo.paa" );
-        return;
-      }
-      if(m_MoneyAmountOnPlayer<m_ParkInFee)
-      {
-        NotificationSystem.AddNotificationExtended( 2, "Garage", GetGarageConfig().NotEnoughMoney, "Garage/image/CarLogo.paa" );
-        //Not enough Money
-        return;
-      }
-      if(!m_canTradeRequest)return;
-      GetRPCManager().SendRPC("Garage", "ParkInRequest",  new Param3<int, CarScript, vector>(m_LowUID, m_CarInPark,m_ParkingPos), true, NULL);
-      m_canTradeRequest = false;
+    if(!m_CarInPark || GetGarageConfig().VehicleMustHaveLock && !GarageHelpers.CanParkVehicle(m_CarInPark))
+      return;
+        
+    if(m_VehiclesName.Count() + 1 > GetGarageConfig().MaxVehicleStored)
+    {
+      NotificationSystem.AddNotificationExtended( 2, "Garage", GetGarageConfig().MaxVehicleStoredReached, "Garage/image/CarLogo.paa" );
+      return;
+    }
+
+    if(m_MoneyAmountOnPlayer < m_ParkInFee)
+    {
+      NotificationSystem.AddNotificationExtended( 2, "Garage", GetGarageConfig().NotEnoughMoney, "Garage/image/CarLogo.paa" );
+      return;
+    }
+
+    if(!m_canTradeRequest)
+      return;
+        
+    GetRPCManager().SendRPC("Garage", "ParkInRequest",  new Param3<int, CarScript, vector>(m_LowUID, m_CarInPark,m_ParkingPos), true, NULL);
+    m_canTradeRequest = false;
   }
 
   void ParkOutHandler()

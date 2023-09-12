@@ -31,27 +31,27 @@ class TraderPlusGnrlConfigClient
 
   void TraderPlusGnrlConfigClient()
   {
-		IDsCategories 							 = new map<int, string>;
-		CurrenciesAccepted					 = new map<int, string>;
-		Licences        						 = new map<int, string>;
-		MoneyName 									 = new array<string>;
-		MoneyValue 									 = new array<int>;
-		VehicleNames   						   = new array<string>;
-		GivenNames      						 = new array<string>;
-		Roles           						 = new array<string>;
-		TraderPos       						 = new array<vector>;
-		InsuranceNames               = new array<string>;
-		InsurancePriceCoefficients   = new array<float>;
-		CollateralMoneyCoefficients  = new array<float>;
-		AuthorizedIDInsurance        = new array<int>;
+		IDsCategories 				= new map<int, string>;
+		CurrenciesAccepted			= new map<int, string>;
+		Licences        			= new map<int, string>;
+		MoneyName 					= new array<string>;
+		MoneyValue 					= new array<int>;
+		VehicleNames   				= new array<string>;
+		GivenNames      			= new array<string>;
+		Roles           			= new array<string>;
+		TraderPos       			= new array<vector>;
+		InsuranceNames              = new array<string>;
+		InsurancePriceCoefficients  = new array<float>;
+		CollateralMoneyCoefficients = new array<float>;
+		AuthorizedIDInsurance       = new array<int>;
   }
 
 	void TransformToSendableConfig(TraderPlusGeneralSettings m_gnrlconfig,TraderPlusIDsSettings m_TraderPlusIDsSettings,TraderPlusVehiclesSettings m_TraderPlusVehiclesSettings, TraderPlusInsuranceSettings m_TraderPlusInsuranceSettings)
 	{
 		EnableShowAllPrices   = m_gnrlconfig.EnableShowAllPrices;
 		UseGarageToTradeCar   = m_gnrlconfig.UseGarageToTradeCar;
-		AcceptWorn 					 = m_gnrlconfig.AcceptedStates.AcceptWorn;
-		CoefficientWorn 		 = m_gnrlconfig.AcceptedStates.CoefficientWorn;
+		AcceptWorn 			  = m_gnrlconfig.AcceptedStates.AcceptWorn;
+		CoefficientWorn 	  = m_gnrlconfig.AcceptedStates.CoefficientWorn;
 		AcceptDamaged 			 = m_gnrlconfig.AcceptedStates.AcceptDamaged;
 		CoefficientDamaged 		= m_gnrlconfig.AcceptedStates.CoefficientDamaged;
 		AcceptBadlyDamaged 	 = m_gnrlconfig.AcceptedStates.AcceptBadlyDamaged;

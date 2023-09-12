@@ -53,7 +53,7 @@ class TraderPlusBankingData
 	static ref TraderPlusBankingData GetAccount(PlayerBase player)
 	{
 		TraderPlusBankingData acc = new TraderPlusBankingData;
-		return Load(player.GetIdentity().GetPlainId(), GetTraderPlusBankConfigServer().DefaultMaxCurrency,GetTraderPlusBankConfigServer().DefaultStartCurrency,player.GetIdentity().GetName());
+		return Load(player.GetIdentity().GetPlainId(), GetTraderPlusBankConfig().DefaultMaxCurrency,GetTraderPlusBankConfig().DefaultStartCurrency,player.GetIdentity().GetName());
 	}
 
 	static ref TraderPlusBankingData Load(string id, int defaultMaxCurrency,int defaultStartCurrency, string name = "")	{

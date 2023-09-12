@@ -334,22 +334,13 @@ class GarageHelpers
 		#ifdef GMDEBUG
 		GetGMLogger().LogInfo("return false");
 		#endif
-    return false;
-	}
-
-	static bool CheckifPlayerHasEnoughMoney(PlayerBase player, int amount)
-	{
-		int playerMoneyAmount = GetPlayerMoney(player);
-		if(playerMoneyAmount >= amount)
-			return true;
-
-		return false;
+    	return false;
 	}
 
 	static bool RemoveMoneyFromPlayer(PlayerBase player, int amount)
 	{
 		if(GetGarageConfig().PayWithBankAccount)
-    {
+		{
 			TraderPlusBankingData account = player.GetBankAccount();
 			if(account)
 			{
@@ -360,7 +351,7 @@ class GarageHelpers
 		}
 		else
 		{
-			return TraderPlusBankHelpers.RemoveMoneyFromPlayer(player, amount);
+			return GetTraderPlusCurrencyModule().RemoveMoneyFromPlayer(player, amount, GetTraderPlusBankConfig().CurrenciesAccepted);
 		}
 
 		return false;
@@ -369,14 +360,14 @@ class GarageHelpers
 	static int GetPlayerMoney(PlayerBase player)
 	{
 		if(GetGarageConfig().PayWithBankAccount)
-    {
+		{
 			TraderPlusBankingData account = player.GetBankAccount();
 			return account.MoneyAmount;
-    }
-    else
-    {
-			return TraderPlusBankHelpers.GetPlayerMoney(player);
-    }
+		}
+		else
+		{
+			return GetTraderPlusCurrencyModule().GetPlayerMoneyFromAllCurrency(player, GetTraderPlusBankConfig().CurrenciesAccepted);
+		}
 	}
 
 	static ref GarageItemData GetGarageItemData(EntityAI item)

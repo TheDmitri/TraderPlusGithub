@@ -2,9 +2,8 @@
 class TraderPlusBankingCore
 {
 	ref TraderPlusBankingSettings m_TraderPlusBankingSettings;
-	ref TraderPlusBankingSettings m_TraderPlusBankingConfigClient;
 
-  ref TraderPlusBankingServer 	m_TraderPlusBankingServer;
+  	ref TraderPlusBankingServer 	m_TraderPlusBankingServer;
 
 	ref TraderPlusBankingData   	m_BankAccount;
 
@@ -27,7 +26,7 @@ class TraderPlusBankingCore
 		else
 		{
 			/*Then we run every config and class that will run on client only*/
-			m_TraderPlusBankingConfigClient = new TraderPlusBankingSettings;
+			m_TraderPlusBankingSettings = new TraderPlusBankingSettings;
 			m_BankAccount = new TraderPlusBankingData;
 		}
 		//we call our function that will initiaze our NPC
@@ -77,7 +76,7 @@ class TraderPlusBankingCore
 	 		GetTraderPlusLogger().LogInfo("GetTraderPlusBankingClientConfig");
 	 		#endif
 
-		  m_TraderPlusBankingConfigClient = data.param1;
+		  m_TraderPlusBankingSettings = data.param1;
 		}
 
 		/*RPC Function called on client*/

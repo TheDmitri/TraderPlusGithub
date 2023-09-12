@@ -140,7 +140,7 @@ class TraderPlusBankingMenu extends UIScriptedMenu
 
     m_AccountID = GetGame().GetUserManager().GetTitleInitiator().GetUid();
 
-    int fees = 100*GetTraderPlusBankingConfigClient().TransactionFees;
+    int fees = 100*GetTraderPlusBankConfig().TransactionFees;
     m_PlayerFees.SetText("#tpb_fees"+" "+fees.ToString()+"%");
 
     m_PlayerIDAccountText.SetText(m_AccountID);
@@ -173,7 +173,8 @@ class TraderPlusBankingMenu extends UIScriptedMenu
 
   void MoneyUpdate()
   {
-    m_MoneyAmountOnPlayer = GetPlayerMoney();
+    PlayerBase player = PlayerBase.Cast(GetGame().GetPlayer());
+    m_MoneyAmountOnPlayer = GetPlayerMoneyFromAllCurrency(player, GetTraderPlusBankConfig().CurrenciesAccepted);
     string stringMoney = TraderPlusHelper.IntToCurrencyString(m_MoneyAmountOnPlayer, ",");
     m_PlayerAmountTextOutput.SetText(stringMoney);
   }
@@ -195,55 +196,6 @@ class TraderPlusBankingMenu extends UIScriptedMenu
               m_canTradeRequest = true;
         }
       }
-  }
-
-  static int GetPlayerMoney()
-  {
-      PlayerBase player = PlayerBase.Cast(GetGame().GetPlayer());
-      if(!player)return 0;
-
-      int amount = 0;
-      float qty;
-      int value;
-      array<EntityAI> itemsArray = new array<EntityAI>;
-      player.GetInventory().EnumerateInventory(InventoryTraversalType.INORDER, itemsArray);
-      for (int i = 0; i < itemsArray.Count(); i++)
-      {
-          ItemBase item = ItemBase.Cast(itemsArray.Get(i));
-          if (item)
-          {
-              string className = item.GetType();
-              for (int j = 0; j < GetTraderPlusConfigClient().MoneyName.Count(); j++)
-              {
-                TStringArray traderCurrencyArray = new TStringArray;
-    						GetTraderPlusConfigClient().MoneyName.Get(j).Split( ",", traderCurrencyArray );
-                for(int k=0;k<traderCurrencyArray.Count();k++)
-                {
-                  if (traderCurrencyArray.Get(k) == className)
-                  {
-                    if(GetTraderPlusBankingConfigClient().CurrenciesAccepted.Count() == 0)
-                    {
-                      qty = TraderPlusHelper.GetItemAmount(item);
-                      value = GetTraderPlusConfigClient().MoneyValue.Get(j);
-                      amount += (value * qty);
-                      continue;
-                    }
-
-                    for(int l=0;l<GetTraderPlusBankingConfigClient().CurrenciesAccepted.Count();l++)
-                    {
-                      if(GetTraderPlusBankingConfigClient().CurrenciesAccepted[l]==traderCurrencyArray[k])
-                      {
-                        qty = TraderPlusHelper.GetItemAmount(item);
-                        value = GetTraderPlusConfigClient().MoneyValue.Get(j);
-                        amount += (value * qty);
-                      }
-                    }
-                  }
-                }
-              }
-          }
-      }
-      return amount;
   }
 
   void  PtPTransfertHandler()
@@ -359,7 +311,7 @@ class TraderPlusBankingMenu extends UIScriptedMenu
         m_PlayerDebugText.SetText("#tpb_number_only");
         return false;
       }
-      AmountMinusFees = AmountAttempt - AmountAttempt*GetTraderPlusBankingConfigClient().TransactionFees;
+      AmountMinusFees = AmountAttempt - AmountAttempt*GetTraderPlusBankConfig().TransactionFees;
       m_BankAmountTextInput.SetText(m_MoneyBankAmount.ToString()+"(+"+AmountMinusFees.ToString()+"/-"+AmountAttempt.ToString()+")");
       return true;
     }
@@ -374,7 +326,7 @@ class TraderPlusBankingMenu extends UIScriptedMenu
         m_PlayerDebugText.SetText("#tpb_number_only");
         return false;
       }
-      int AmountPlusFees = AmountAttempt + AmountAttempt*GetTraderPlusBankingConfigClient().TransactionFees;
+      int AmountPlusFees = AmountAttempt + AmountAttempt*GetTraderPlusBankConfig().TransactionFees;
       m_TransfertBankAmountTextOutput.SetText(m_MoneyBankAmount.ToString()+"(-"+AmountPlusFees.ToString()+")");
       return true;
     }

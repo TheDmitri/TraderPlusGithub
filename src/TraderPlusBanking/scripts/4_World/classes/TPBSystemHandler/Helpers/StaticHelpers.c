@@ -18,13 +18,8 @@ static ref TraderPlusBankingServer GetTraderPlusBankingServer()
 }
 
 /*class that allows to access config on server side everywhere*/
-static ref TraderPlusBankingSettings GetTraderPlusBankConfigServer()	{
+static ref TraderPlusBankingSettings GetTraderPlusBankConfig()	{
 	return GetTraderPlusBankingCore().m_TraderPlusBankingSettings;
-}
-
-/*clas that allows me to access the client class */
-static ref TraderPlusBankingSettings GetTraderPlusBankingConfigClient()	{
-	return GetTraderPlusBankingCore().m_TraderPlusBankingConfigClient;
 }
 
 	/*clas that allows me to access the client class */

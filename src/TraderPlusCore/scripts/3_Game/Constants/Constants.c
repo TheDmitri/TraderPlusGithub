@@ -1,0 +1,1 @@
+const string TRADERPLUS_CURRENCY_CONFIG = TRADERPLUS_CONFIG_DIR_SERVER + "TraderPlusCurrencyConfig.json";

@@ -111,7 +111,7 @@ class TraderPlusServer
       if(GetTraderPlusPriceConfig().EnableDefaultTraderStock == 0)
             return;
 
-      array<ref TraderPlusIDs>tpIDs = GetTraderPlusIDConfig().IDs;
+      array<ref TraderPlusIDs> tpIDs = GetTraderPlusIDConfig().IDs;
 
       foreach(int idx, TraderPlusIDs tpId: tpIDs)
       {
@@ -268,9 +268,9 @@ class TraderPlusServer
       string line, result_data;
       TStringArray token = new TStringArray;
 
-      bool canTrade = TraderPlusHelper.CheckifPlayerHasEnoughMoney(product.Customer,product.Price, product.TraderID, moneyAmount);
-      if(!canTrade)return false;
-
+      bool canTrade = GetTraderPlusCurrencyModule().CheckIfPlayerHasEnoughMoney(product.Customer, product.Price, product.acceptedCurrencies);
+      if(!canTrade)
+        return false;
 
       if(product.MaxStock == TRADEMODE_UNLIMITED)
       {
@@ -289,15 +289,11 @@ class TraderPlusServer
         line.Split(" ",token);
         if(token[0] == product.ClassName && token[2] == product.Health.ToString())
         {
-					if(token[1].ToInt()<product.Multiplier)
-          {
-            return false;
-          }
-          else
+					if(token[1].ToInt() >= product.Multiplier)
           {
             state = TraderPlusHelper.CreateInInventoryWithState(product.Customer, product.ClassName, product.Health,product.Quantity, product.CollateralMoney);
             if(!state)return false;
-            TraderPlusHelper.RemoveMoneyFromPlayer(product.Customer,product.Price,product.TraderID);
+            GetTraderPlusCurrencyModule().RemoveMoneyAmountFromPlayer(product.Customer, product.Price, product.acceptedCurrencies);
             substract_result = token[1].ToInt() - Math.AbsInt(product.Multiplier);
             if(substract_result == 0)
             {
@@ -310,6 +306,10 @@ class TraderPlusServer
             }
             tpStockCategory.Save(product.TraderID);
             return true;
+          }
+          else
+          {
+            return false;
           }
         }
         token.Clear();
@@ -327,7 +327,7 @@ class TraderPlusServer
       {
         account.Insurances.Remove(product.CollateralMoney);
         account.UpdateAccount(product.Customer);
-        TraderPlusHelper.AddMoneyToPlayer(product.Customer,product.Price,product.TraderID);
+        GetTraderPlusCurrencyModule().AddMoneyToPlayer(product.Customer,product.Price,product.acceptedCurrencies);
 
         return true;
       }
@@ -351,7 +351,7 @@ class TraderPlusServer
             state = TraderPlusHelper.RemoveOurProduct(product.Customer, product.ClassName, product.Quantity, product.Health, false, product.Multiplier);
 
         if(state)
-            TraderPlusHelper.AddMoneyToPlayer(product.Customer,product.Price,product.TraderID);
+            GetTraderPlusCurrencyModule().AddMoneyToPlayer(product.Customer,product.Price,product.acceptedCurrencies);
 
         return state;
       }
@@ -371,7 +371,7 @@ class TraderPlusServer
         GetTraderPlusLogger().LogDebug("the stock doesn't contain our item so we can add it to our stock");
         TraderPlusCategory tpStockCategory = TraderPlusHelper.GetStockCategory(product.TraderID,product.Category, false);
 
-        TraderPlusHelper.AddMoneyToPlayer(product.Customer,product.Price,product.TraderID);
+        GetTraderPlusCurrencyModule().AddMoneyToPlayer(product.Customer, product.Price, product.acceptedCurrencies);
         if(GetTraderPlusConfigServer().StoreOnlyToPristineState)
             data = product.ClassName + " " + product.Multiplier.ToString() +" "+"0";
         else
@@ -397,7 +397,7 @@ class TraderPlusServer
 
       TraderPlusCategory tpStockCategory = TraderPlusHelper.GetStockCategory(product.TraderID,product.Category, false);
 
-      for(int j=0; j<tpStockCategory.Products.Count();j++)
+      for(int j = 0; j < tpStockCategory.Products.Count() ; j++)
       {
         TStringArray token = new TStringArray;
         string line = tpStockCategory.Products[j];
@@ -417,7 +417,7 @@ class TraderPlusServer
 
           if(state)
           {
-            TraderPlusHelper.AddMoneyToPlayer(product.Customer,product.Price,product.TraderID);
+            GetTraderPlusCurrencyModule().AddMoneyToPlayer(product.Customer, product.Price, product.acceptedCurrencies);
             int substract_result = token[1].ToInt() + product.Multiplier;
             string data;
             if(GetTraderPlusConfigServer().StoreOnlyToPristineState)
@@ -440,40 +440,46 @@ class TraderPlusServer
 
     bool LicenceBuyHandler(TraderPlusProduct product)
     {
-      if(product.ClassName.Contains(GetTraderPlusConfigServer().LicenceKeyWord))
+      if(!product.ClassName.Contains(GetTraderPlusConfigServer().LicenceKeyWord))
+        return false;
+      
+      if(product.TradMode == TRADEMODE_SELL)
+        return false;
+
+      foreach(string licence: GetTraderPlusConfigServer().Licences)
       {
-        if(product.TradMode == TRADEMODE_SELL)return false;
-        foreach(string licence: GetTraderPlusConfigServer().Licences)
+        if(!CF_String.EqualsIgnoreCase(product.ClassName, licence))
+          continue;
+        
+        TraderPlusBankingData account = product.Customer.GetBankAccount();
+        if(account)
         {
-          if(product.ClassName == licence)
+          //In case licence is already there, who knows why ...
+          if(account.Licences.Find(product.ClassName) == TraderPlusFlags.UNDEFINED)
           {
-            TraderPlusBankingData account = product.Customer.GetBankAccount();
-            if(account)
-            {
-              //In case licence is already there, who knows why ...
-              if(account.Licences.Find(product.ClassName) == -1)
-              {
-                account.Licences.Insert(product.ClassName);
-                TraderPlusHelper.RemoveMoneyFromPlayer(product.Customer,product.Price, product.TraderID );
-                account.UpdateAccount(product.Customer);
-                GetTraderPlusLogger().LogInfo("Transaction Buy Succeeded:"+product.Customer.GetIdentity().GetName()+" product:"+product.ClassName +" qty:"+(product.Quantity*product.Multiplier).ToString()+" health:"+product.Health.ToString()+" price:"+product.Price.ToString());
-                GetRPCManager().SendRPC("TraderPlus", "GetStockResponseBasedOnID",  new Param3<int,TraderPlusStock, string>(TraderPlusResponse.BUY_SUCCESS,TraderPlusStock.GetStockFromID(product.TraderID, TraderPlusHelper.GetCategoriesFromID(product.TraderID)), product.Category), true, product.Customer.GetIdentity());
-              }
-              else
-              {
-                GetTraderPlusLogger().LogInfo("Transaction Buy Failed:"+product.Customer.GetIdentity().GetName()+" product:"+product.ClassName +" qty:"+(product.Quantity*product.Multiplier).ToString()+" health:"+product.Health.ToString()+" price:"+product.Price.ToString());
-                GetRPCManager().SendRPC("TraderPlus", "GetStockResponseBasedOnID",  new Param3<int,TraderPlusStock, string>(TraderPlusResponse.BUY_FAILED,TraderPlusStock.GetStockFromID(product.TraderID, TraderPlusHelper.GetCategoriesFromID(product.TraderID)), product.Category), true, product.Customer.GetIdentity());
-              }
-            }
-            else
-            {
-              GetTraderPlusLogger().LogInfo("Transaction Buy Failed:"+product.Customer.GetIdentity().GetName()+" product:"+product.ClassName +" qty:"+(product.Quantity*product.Multiplier).ToString()+" health:"+product.Health.ToString()+" price:"+product.Price.ToString());
-              GetRPCManager().SendRPC("TraderPlus", "GetStockResponseBasedOnID",  new Param3<int,TraderPlusStock, string>(TraderPlusResponse.BUY_FAILED,TraderPlusStock.GetStockFromID(product.TraderID, TraderPlusHelper.GetCategoriesFromID(product.TraderID)), product.Category), true, product.Customer.GetIdentity());
-            }
-            return true;
+            account.Licences.Insert(product.ClassName);
+            GetTraderPlusCurrencyModule().RemoveMoneyAmountFromPlayer(product.Customer,product.Price, product.acceptedCurrencies );
+            account.UpdateAccount(product.Customer);
+
+            GetTraderPlusLogger().LogInfo("Transaction Buy Succeeded:"+product.Customer.GetIdentity().GetName()+" product:"+product.ClassName +" qty:"+(product.Quantity*product.Multiplier).ToString()+" health:"+product.Health.ToString()+" price:"+product.Price.ToString());
+            
+            GetRPCManager().SendRPC("TraderPlus", "GetStockResponseBasedOnID",  new Param3<int,TraderPlusStock, string>(TraderPlusResponse.BUY_SUCCESS,TraderPlusStock.GetStockFromID(product.TraderID, TraderPlusHelper.GetCategoriesFromID(product.TraderID)), product.Category), true, product.Customer.GetIdentity());
+          }
+          else
+          {
+            GetTraderPlusLogger().LogInfo("Transaction Buy Failed:"+product.Customer.GetIdentity().GetName()+" product:"+product.ClassName +" qty:"+(product.Quantity*product.Multiplier).ToString()+" health:"+product.Health.ToString()+" price:"+product.Price.ToString());
+            
+            GetRPCManager().SendRPC("TraderPlus", "GetStockResponseBasedOnID",  new Param3<int,TraderPlusStock, string>(TraderPlusResponse.BUY_FAILED,TraderPlusStock.GetStockFromID(product.TraderID, TraderPlusHelper.GetCategoriesFromID(product.TraderID)), product.Category), true, product.Customer.GetIdentity());
           }
         }
+        else
+        {
+          GetTraderPlusLogger().LogInfo("Transaction Buy Failed:"+product.Customer.GetIdentity().GetName()+" product:"+product.ClassName +" qty:"+(product.Quantity*product.Multiplier).ToString()+" health:"+product.Health.ToString()+" price:"+product.Price.ToString());
+          GetRPCManager().SendRPC("TraderPlus", "GetStockResponseBasedOnID",  new Param3<int,TraderPlusStock, string>(TraderPlusResponse.BUY_FAILED,TraderPlusStock.GetStockFromID(product.TraderID, TraderPlusHelper.GetCategoriesFromID(product.TraderID)), product.Category), true, product.Customer.GetIdentity());
+        }
+        return true;
       }
+
       return false;
     }
 
@@ -549,7 +555,7 @@ class TraderPlusServer
       if (!ctx.Read(data))
         return;
 
-      int traderID=-1;
+      int traderID = TraderPlusFlags.UNDEFINED;
 
       PlayerBase TraderPlayer = PlayerBase.Cast(data.param1);
       if(TraderPlayer)
@@ -559,7 +565,7 @@ class TraderPlusServer
       if (TraderBuilding)
         traderID = TraderBuilding.TraderID;
 
-      if(traderID==-1)
+      if(traderID == TraderPlusFlags.UNDEFINED)
         return;
 
       TraderPlusStock tpStock = new TraderPlusStock;
@@ -584,6 +590,7 @@ class TraderPlusServer
       PlayerBase player = TraderPlusGetPlayerByIdentity(sender);
       TraderPlusProduct product = data.param1;
       product.Customer = player;
+      product.SetAcceptedCurrencies();
 
       if(LicenceBuyHandler(product))return;
 

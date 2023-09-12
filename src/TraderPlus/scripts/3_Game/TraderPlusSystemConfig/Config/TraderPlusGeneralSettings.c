@@ -1,6 +1,6 @@
 class TraderPlusGeneralSettings
 {
-	string 																 Version = "";
+	string 								   Version = "";
 	bool                                   ConvertTraderConfigToTraderPlus;
 	bool                                   ConvertTraderConfigToTraderPlusWithStockBasedOnCE;
 	bool                                   UseGarageToTradeCar;
@@ -19,15 +19,15 @@ class TraderPlusGeneralSettings
 	ref TStringArray                       Licences;
 	ref TraderPlusStates				   AcceptedStates;
 	bool                                   StoreOnlyToPristineState;
-	ref array<ref TraderPlusCurrency>			 Currencies;
-	ref array<ref TraderPlusData>					 Traders;
-	ref array<ref TraderPlusObject>				 TraderObjects;
+	ref array<ref TraderPlusCurrency>	   Currencies;
+	ref array<ref TraderPlusData>		   Traders;
+	ref array<ref TraderPlusObject>		   TraderObjects;
 
 	void TraderPlusGeneralSettings()
 	{
-		Currencies 						= new array<ref TraderPlusCurrency>;
+		Currencies 					= new array<ref TraderPlusCurrency>;
 		Licences         			= new TStringArray;
-		Traders 							= new array<ref TraderPlusData>;
+		Traders 					= new array<ref TraderPlusData>;
 		TraderObjects 				= new array<ref TraderPlusObject>;
 	}
 
@@ -47,7 +47,7 @@ class TraderPlusGeneralSettings
 		IsReceiptSaveCargo = true;
 		LockPickChance = 0.3;
 		LicenceKeyWord = "Licence";
-    Licences.Insert("Car Licence");
+    	Licences.Insert("Car Licence");
 		Licences.Insert("Admin Licence");
 		AcceptedStates = new TraderPlusStates(true, true, true);
 		StoreOnlyToPristineState = false;
@@ -111,9 +111,9 @@ class TraderPlusGeneralSettings
 		if(Version != TRADERPLUS_CURRENT_VERSION)
 		{
 			Version = TRADERPLUS_CURRENT_VERSION;
-			AcceptedStates.CoefficientWorn = 0.75;
-			AcceptedStates.CoefficientDamaged = 0.5;
-			AcceptedStates.CoefficientBadlyDamaged = 0.25;
+			
+
+
 			Save();
 		}
 	}
