@@ -221,69 +221,75 @@ class TraderPlusClient
 	{
 		filter.ToLower();
 		PlayerBase player = PlayerBase.Cast(GetGame().GetPlayer());
-		if(!player)return 0;
+		if(!player)
+			return 0;
 
 		if(pos == TraderPlusInventoryCategory.LICENCES)
-		{
-			m_PlayerItems.Clear();
-
-			for(int li=0;li<GetBankAccount().Licences.Count();li++)
-      		{
-				TraderPlusArticle lproduct = new TraderPlusArticle;
-				lproduct.AddPlayerItems("licence_section",GetBankAccount().Licences[li],1,0,0,false);
-				m_PlayerItems.Insert(lproduct);
-      		}
-			return m_PlayerItems.Count();
-		}
+			return GetLicences(player,m_PlayerItems);
 
 		if(pos == TraderPlusInventoryCategory.VEHICLES)
-		{
-			m_PlayerItems.Clear();
+			return GetVehicles(player,m_PlayerItems);
 
-			for(int lv=0;lv<GetGarageCore().m_VehiclesName.Count();lv++)
-			{
-				TraderPlusArticle vproduct = new TraderPlusArticle;
-				vproduct.AddPlayerItems("vehicle_section",GetGarageCore().m_VehiclesName[lv],1,1,GetGarageCore().m_VehiclesHealth[lv],true);
-				m_PlayerItems.Insert(vproduct);
-			}
+		if(!TraderPlusHelper.GetPlayersItems(player,m_PlayerItems,filter))
+			return 0;
+
+		if(pos == TraderPlusInventoryCategory.ALL)
 			return m_PlayerItems.Count();
-		}
 
-		bool state = TraderPlusHelper.GetPlayersItems(player,m_PlayerItems,filter);
-		if(state)
+		MapTraderPlusItems traderPlusItems = new MapTraderPlusItems;
+		GetTraderPlusItemsListFromAllCategory(m_StockCategories,traderPlusItems);
+
+		array<ref TraderPlusArticle> tPlayerItems = new array<ref TraderPlusArticle>;
+		for(int j = 0 ; j < m_PlayerItems.Count() ; j++)
 		{
-			if(pos == TraderPlusInventoryCategory.ALL)
-				return m_PlayerItems.Count();
-
-			MapTraderPlusItems ttraderPlusItems = new MapTraderPlusItems;
-			GetTraderPlusItemsListFromAllCategory(m_StockCategories,ttraderPlusItems);
-
-			array<ref TraderPlusArticle> tPlayerItems = new array<ref TraderPlusArticle>;
-			for(int j = 0 ; j<m_PlayerItems.Count();j++)
+			string playerItemClassName = m_PlayerItems[j].ClassName;
+			foreach(string category, array<ref TraderPlusItem> tpItems: traderPlusItems.traderPlusItems)
 			{
-				string playerItem = m_PlayerItems[j].ClassName;
-				foreach(string category, array<ref TraderPlusItem> tpItems: ttraderPlusItems.traderPlusItems)
+				if(!tpItems || tpItems.Count() == 0)continue;
+				foreach(TraderPlusItem traderPlusItem: tpItems)
 				{
-					if(!tpItems || tpItems.Count() == 0)continue;
-					foreach(TraderPlusItem traderPlusItem: tpItems)
-					{
-						if(CF_String.EqualsIgnoreCase(playerItem,traderPlusItem.ClassName) && traderPlusItem.SellPrice != TRADEMODE_NO_TRADE)
-						{
-							TraderPlusArticle pproduct = new TraderPlusArticle;
-							pproduct.AddPlayerItems(category,m_PlayerItems[j].ClassName,m_PlayerItems[j].Count,m_PlayerItems[j].Quantity,m_PlayerItems[j].Health,m_PlayerItems[j].HasAttachments);
-							tPlayerItems.Insert(pproduct);
-						}
-					}
+					if(!CF_String.EqualsIgnoreCase(playerItemClassName,traderPlusItem.ClassName) || traderPlusItem.SellPrice == TRADEMODE_NO_TRADE)
+						continue;
+					
+					TraderPlusArticle product = new TraderPlusArticle;
+					product.AddPlayerItems(category,m_PlayerItems[j].ClassName,m_PlayerItems[j].Count,m_PlayerItems[j].Quantity,m_PlayerItems[j].Health,m_PlayerItems[j].HasAttachments);
+					tPlayerItems.Insert(product);
 				}
 			}
-
-			m_PlayerItems.Clear();
-			m_PlayerItems = tPlayerItems;
-
-			CombinedSpecificItems(m_PlayerItems);
-			return m_PlayerItems.Count();
 		}
-		return 0;
+
+		m_PlayerItems.Clear();
+		m_PlayerItems = tPlayerItems;
+		CombinedSpecificItems(m_PlayerItems);
+		return m_PlayerItems.Count();
+	}
+
+	int GetLicences(PlayerBase player, out array<ref TraderPlusArticle> m_PlayerItems)
+	{
+		m_PlayerItems.Clear();
+
+		foreach(string licence: GetBankAccount().Licences)
+		{
+			TraderPlusArticle product = new TraderPlusArticle;
+			product.AddPlayerItems("licence_section", licence, 1, 0, 0, false);
+			m_PlayerItems.Insert(product);
+		}
+
+		return m_PlayerItems.Count();
+	}
+
+	int GetVehicles(PlayerBase player, out array<ref TraderPlusArticle> m_PlayerItems)
+	{
+		m_PlayerItems.Clear();
+
+		for(int i=0; i<GetGarageCore().m_VehiclesName.Count(); i++)
+		{
+			TraderPlusArticle product = new TraderPlusArticle;
+			product.AddPlayerItems("vehicle_section", GetGarageCore().m_VehiclesName[i], 1, 1, GetGarageCore().m_VehiclesHealth[i], true);
+			m_PlayerItems.Insert(product);
+		}
+
+		return m_PlayerItems.Count();
 	}
 
 	void CombinedSpecificItems(out array<ref TraderPlusArticle> m_PlayerItems)

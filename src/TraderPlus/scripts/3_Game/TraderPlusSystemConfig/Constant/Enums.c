@@ -38,11 +38,3 @@ enum TraderPlusSound
   SELL,
   BUY
 };
-
-enum TraderPlusLogLevel
-{
-    Debug,
-    Info,
-    Warning,
-    Error
-}

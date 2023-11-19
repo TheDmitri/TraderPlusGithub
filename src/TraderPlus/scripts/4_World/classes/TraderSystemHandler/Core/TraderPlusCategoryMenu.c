@@ -198,7 +198,7 @@ class TraderPlusCategoryMenu extends UIScriptedMenu
   }
 
   //look to see if previous product trade still exist so we keep showing it in the product information panel
-  TraderPlusArticle  CheckifPreviousProductExist(string productname,int health)
+  TraderPlusArticle  CheckIfPreviousProductExist(string productname,int health)
   {
     for(int i=0;i<CategoryItems.Products.Count();i++)
     {

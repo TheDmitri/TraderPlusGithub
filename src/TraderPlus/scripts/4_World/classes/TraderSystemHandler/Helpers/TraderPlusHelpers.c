@@ -1021,24 +1021,28 @@ static bool IsWearByPlayer(EntityAI entity)
 	}
   //--------------------------End Vehicle handler functions---------------------------//
 
-  static int GetMaxItemQuantityServer(string classname)
+  static int GetMaxItemQuantityServer(string className)
   {
-    EntityAI temp_ent = EntityAI.Cast(GetGame().CreateObject(classname , "0 0 0"));
-    if(temp_ent)
-    {
-      ItemBase temp_item = ItemBase.Cast(temp_ent);
-      if(temp_item)
-      {
-        float currentquantity, minquantity, maxquantity;
-        QuantityConversions.GetItemQuantity(temp_item, currentquantity, minquantity, maxquantity);
-        if(maxquantity == 0)
-            maxquantity = 1;
-        GetGame().ObjectDelete(temp_item);
-        return maxquantity;
-      }
+    EntityAI entity = EntityAI.Cast(GetGame().CreateObject(className , "0 0 0"));
+    if(!entity)
+      return 0;
+
+    ItemBase item = ItemBase.Cast(entity);
+    if(!item){
+      GetGame().ObjectDelete(entity);
+      return 0;
     }
-    GetGame().ObjectDelete(temp_ent);
-    return 0;
+    
+    float currentQuantity, minQuantity, maxQuantity;
+    QuantityConversions.GetItemQuantity(entity, currentQuantity, minQuantity, maxQuantity);
+    if(maxQuantity == 0)
+      maxQuantity = 1;
+
+    GetGame().ObjectDelete(item);
+
+    GetTraderPlusLogger().LogDebug(string.Format("GetMaxItemQuantityServer: %1 maxQuantity:%2", className, maxQuantity));
+
+    return maxQuantity;
   }
 
   static int GetMaxItemQuantityClient(string classname)
